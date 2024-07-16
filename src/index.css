@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+.footer__navigation__page-btn {
+    font-size: 12px !important;
+    font-weight: 400 !important;
+}
+
+.vgt-global-search {
+    padding: 20px !important;
+    background: rgb(246, 246, 246);
+    border: initial !important;
+}
+
+@media (min-width: 768px){
+  .main.active{
+    margin-left: 0px;
+    width: 100%;
+  }
+}
