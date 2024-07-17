@@ -1,13 +1,7 @@
 <template>
-    <div class="grid grid-cols-1 gap-6 mb-6">
+    <div class="grid grid-cols-1 gap-6 mb-6" v-if="activado==false">
         <div class="bg-white rounded-md border border-gray-100 p-6 shadow-md shadow-black/5">
-            <!-- <div class="flex mb-6">
-                <div>
-                    <label for="countries" class="block font-semibold text-gray-900 dark:text-white">
-                        Estudio:</label>
-                </div>
-            </div> -->
-            <div class="flex items-center">
+            <div class="flex items-center" >
                 <select id="countries"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 placeholder-gray-400 focus:ring-primary-500"
                     v-model="selectedStudy" @change="getSurveyId(this.selectedStudy)">
@@ -21,26 +15,9 @@
             </div>
         </div>
     </div>
-    <div class="grid grid-cols-1 gap-6 mb-6">
+
+    <div class="grid grid-cols-1 gap-6 mb-6" v-if="loading">
         <div class="bg-white border border-gray-100 shadow-md shadow-black/5 p-6 rounded-md">
-            <!-- <VueGoodTable :columns="columns" :rows="rows" :search-options="searchOptions"
-                :pagination-options="paginationOptions" max-height="450px" :fixed-header="true">
-                <template v-slot:table-row="props">
-                    <span v-if="props.column.field == 'acciones'">
-                        <button type="button"
-                            class="text-white bg-violet-700 hover:bg-violet-800 focus:ring-4 focus:outline-none focus:ring-violet-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                            data-bs-toggle="modal" data-bs-target="#modalUpdateUser"
-                            @click="openUpdateProjectModal(props.row)">
-                            Editar
-                        </button>
-                    </span>
-                </template>
-                <template v-slot:emptystate>
-                    <div style="text-align: center;">
-                        No hay datos disponibles
-                    </div>
-                </template>
-            </VueGoodTable> -->
             <template v-if="loading">
                 <div class="text-center">
                     <div role="status">
@@ -54,82 +31,124 @@
                                 d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
                                 fill="currentFill" />
                         </svg>
-                        <span class="sr-only">Loading...</span>
+                        <p>Cargando...</p>
                     </div>
                 </div>
-            </template>
-            <template v-else>
-                <div class="relative overflow-x-auto">
-                    <table class="w-full text-sm border text-left rtl:text-right">
-                        <thead class="text-white uppercase bg-violet-700">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">
-                                    Número de la región
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    Nombre de la región
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    Casos a lograr
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    Estado de avance
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    Faltantes
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    Realizadas el día de hoy
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    % de avance
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="regionInfo in regionCounts" :key="regionInfo.number"
-                                class="bg-white border-b">
-                                <td class="px-6 py-3">
-                                    {{ regionInfo.number }}
-                                </td>
-                                <td class="px-6 py-3">
-                                    {{regionInfo.name}}
-                                </td>
-                                <td class="px-6 py-3">
-                                    {{ regionInfo.total_reg }}
-                                </td>
-                                <td class="px-6 py-3">
-                                    {{regionInfo.total || 0}}
-                                </td>
-                                <td class="px-6 py-3">
-                                    {{regionInfo.total_reg - regionInfo.total}}
-                                </td>
-                                <td class="px-6 py-3">
-                                    {{regionInfo.today}}
-                                </td>
-                                <td class="px-6 py-3">
-                                    <div class="relative h-4 bg-neutral-400 rounded-full">
-                                        <div class="absolute inset-y-0 left-0 flex items-center rounded-full"
-                                            :class="{
-                                                'bg-green-500': regionInfo.total / regionInfo.total_reg >= 1,
-                                                'bg-orange-500': regionInfo.total / regionInfo.total_reg >= 0.5 && regionInfo.total / regionInfo.total_reg < 1,
-                                                'bg-red-500': regionInfo.total / regionInfo.total_reg < 0.5
-                                            }"
-                                             :style="{ width: `${Math.min((regionInfo.total / regionInfo.total_reg) * 100, 100)}%`}">
-                                            <span class="text-xs text-white px-2">
-                                                {{ Math.round((regionInfo.total / regionInfo.total_reg) * 100) }}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            </template>            
+        </div>
+    </div>
+
+    <div class="border-b border-gray-200" v-if="activado==true">
+        <nav class="flex justify-around">
+            <button 
+                v-for="(tab, index) in tabs" 
+                :key="index" 
+                @click="selectedTab = tab" 
+                :class="['py-4 px-6 font-bold focus:outline-none', { 'text-violet-500 border-b-2 border-violet-500': selectedTab === tab, 'text-gray-600 hover:text-violet-500': selectedTab !== tab }]"
+            > {{ tab }}
+            </button>
+        </nav>
+    </div>
+    <div class="p-6" v-if="activado==true">
+        <div v-if="selectedTab === 'Resumen General'">
+            <div class="flex flex-wrap -mx-4">
+                    <div class="w-full md:w-1/3 px-4 mb-4">
+                        <div class="bg-white shadow-md rounded-lg p-6">
+                            <h3 class="text-lg font-semibold">Total de encuestas</h3>
+                            <p>{{ surveyID.length }}</p>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/3 px-4 mb-4">
+                        <div class="bg-white shadow-md rounded-lg p-6">
+                            <h3 class="text-lg font-semibold">Encuestas Correctas</h3>
+                            <p>{{ correctSurveyID.length }}</p>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/3 px-4 mb-4">
+                        <div class="bg-white shadow-md rounded-lg p-6">
+                            <h3 class="text-lg font-semibold">Encuestas Incorrectas</h3>
+                            <p>{{ expiredcanceledSurveyID.length }}</p>
+                        </div>
+                    </div>
                 </div>
-                <!-- <h3>
-                    Cantidad de encuestas canceladas y expiradas: {{ expiredcanceledSurveyID.length}}
-                </h3> -->
-            </template>
+        </div>
+        <div v-if="selectedTab === 'Resumen por Región'">
+            <div class="relative overflow-x-auto">
+                <table class="w-full text-sm border text-left rtl:text-right">
+                    <thead class="text-white uppercase bg-violet-700">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Número de la región
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Nombre de la región
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Casos a lograr
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Estado de avance
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Faltantes
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Realizadas el día de hoy
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                % de avance
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="regionInfo in regionCounts" :key="regionInfo.number"
+                            class="bg-white border-b">
+                            <td class="px-6 py-3">
+                                {{ regionInfo.number }}
+                            </td>
+                            <td class="px-6 py-3">
+                                {{regionInfo.name}}
+                            </td>
+                            <td class="px-6 py-3">
+                                {{ regionInfo.total_reg }}
+                            </td>
+                            <td class="px-6 py-3">
+                                {{regionInfo.total || 0}}
+                            </td>
+                            <td class="px-6 py-3">
+                                {{regionInfo.total_reg - regionInfo.total}}
+                            </td>
+                            <td class="px-6 py-3">
+                                {{regionInfo.today}}
+                            </td>
+                            <td class="px-6 py-3">
+                                <div class="relative h-4 bg-neutral-400 rounded-full">
+                                    <div class="absolute inset-y-0 left-0 flex items-center rounded-full"
+                                        :class="{
+                                            'bg-green-500': regionInfo.total / regionInfo.total_reg >= 1,
+                                            'bg-orange-500': regionInfo.total / regionInfo.total_reg >= 0.5 && regionInfo.total / regionInfo.total_reg < 1,
+                                            'bg-red-500': regionInfo.total / regionInfo.total_reg < 0.5
+                                        }"
+                                        :style="regionInfo.total_reg !== 0 ? { width: `${Math.min((regionInfo.total / regionInfo.total_reg) * 100, 100)}%` } : {}"
+                                        >
+                                        <span class="text-xs text-white px-2">
+                                            {{ Math.round((regionInfo.total / regionInfo.total_reg) * 100) }}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div v-if="selectedTab === 'Diferencias GPS'">
+            <h2 class="text-xl font-semibold">Diferencias GPS</h2>
+            <p>Contenido de Diferencias GPS.</p>
+        </div>
+        <div v-if="selectedTab === 'Flags'">
+            <h2 class="text-xl font-semibold">Flags</h2>
+            <p>Contenido de Flags.</p>
         </div>
     </div>
 </template>
@@ -153,8 +172,11 @@
                 loading: false,
                 surveyID: [],
                 expiredcanceledSurveyID: [],
+                correctSurveyID: [],
                 formattedData: [],
-                regionCounts: {}
+                regionCounts: {},
+                tabs: ['Resumen General', 'Resumen por Región', 'Diferencias GPS','Flags'],
+                selectedTab: 'Resumen General',
             }
         },
         methods: {
@@ -169,19 +191,25 @@
             },
             async getSurveyId(study) {
                 try {
-                    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-                    this.activado = true;
                     this.loading = true;
+                    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
                     //Total
                     const response = await axios.get(`http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=${study.surveyID}&testMode=False&completed=True&filtered=FalsedateType=Upload`, this.dooblouser)
                     this.surveyID = response.data
                     await sleep(500);
                     //Expiradas y canceladas
-                    const responseB = await axios.get(`http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=${study.surveyID}&testMode=False&completed=True&filtered=False&statuses=7,10`, this.dooblouser);
+                    const responseB = await axios.get(`http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=${study.surveyID}&testMode=False&completed=True&filtered=False&statuses=2,3,4,7,8,9,10,12,13`, this.dooblouser);
                     this.expiredcanceledSurveyID = responseB.data
                     await sleep(500);
+                    //correctas
+                    const responsec = await axios.get(`http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=${study.surveyID}&testMode=False&completed=True&filtered=False&statuses=1,5,6,11`, this.dooblouser);
+                    this.correctSurveyID = responsec.data
+                    await sleep(500);
+                    //
                     await this.getDataSurvey(study, this.surveyID)
                     this.loading = false;
+                    
+                    this.activado = true;
                 } catch (error) {
                     console.error("Error", error);
                 }
