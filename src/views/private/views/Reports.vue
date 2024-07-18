@@ -31,7 +31,7 @@
                                 d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
                                 fill="currentFill" />
                         </svg>
-                        <p>Cargando...</p>
+                        <p>Cargando {{ progreso }}%...</p>
                     </div>
                 </div>
             </template>            
@@ -143,8 +143,27 @@
             </div>
         </div>
         <div v-if="selectedTab === 'Diferencias GPS'">
-            <h2 class="text-xl font-semibold">Diferencias GPS</h2>
-            <p>Contenido de Diferencias GPS.</p>
+            <!-- <h2 class="text-xl font-semibold">Diferencias GPS</h2>
+            <p>Contenido de Diferencias GPS.</p> -->
+            <!-- <p>{{ formattedData }}</p> -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>Lat Base</th>
+                        <th>Lon Base</th>
+                        <th>Lat 1</th>
+                        <th>Lon 1</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(data, index) in gpsDatos" :key="index">
+                        <td>{{ data.lat_base }}</td>
+                        <td>{{ data.lon_base }}</td>
+                        <td>{{ data.lat_1 }}</td>
+                        <td>{{ data.lon_1 }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         <div v-if="selectedTab === 'Flags'">
             <h2 class="text-xl font-semibold">Flags</h2>
@@ -177,6 +196,10 @@
                 regionCounts: {},
                 tabs: ['Resumen General', 'Resumen por Región', 'Diferencias GPS','Flags'],
                 selectedTab: 'Resumen General',
+                RegionVarName: "",
+                progreso: 0,
+                gpsDatos: [],
+
             }
         },
         methods: {
@@ -193,6 +216,8 @@
                 try {
                     this.loading = true;
                     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+                    //Carga nombre region
+                    this.RegionVarName = study.RegionVarName;
                     //Total
                     const response = await axios.get(`http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=${study.surveyID}&testMode=False&completed=True&filtered=FalsedateType=Upload`, this.dooblouser)
                     this.surveyID = response.data
@@ -220,6 +245,7 @@
                     group.push(surveyID.slice(i, i + 99));
                 }
                 let formattedGroups = group.map(grupo => grupo.join(','));
+                let totalGroups = formattedGroups.length;
                 try {
                     let respuestas = []
                     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -227,9 +253,14 @@
                         const response = await axios.get(`http://api.dooblo.net/newapi/SimpleExport?surveyID=${study.surveyID}&subjectIDs=${formattedGroups[i]}`, this.dooblouser);
                         respuestas.push(response.data); // Aquí puedes ajustar según lo que necesites
                         await sleep(500);
+
+                        // Calcular y mostrar el progreso
+                        let progress = ((i + 1) / totalGroups) * 100;
+                        this.progreso = progress.toFixed(1);
                     }
                     this.formattedData = [...respuestas.flat()]
                     this.countSurveysByRegion();
+                    
                 } catch (error) {
                     console.error('Error al obtener los registros:', error);
                 }
@@ -249,7 +280,8 @@
                 }
                 this.formattedData.forEach(survey => {
                     survey.Subjects.forEach(subject => {
-                        const regionColumn = subject.Columns.find(column => column.Var === 'region');
+                        //const regionColumn = subject.Columns.find(column => column.Var === 'region');
+                        const regionColumn = subject.Columns.find(column => column.Var === this.RegionVarName);
                         const dateColumn = subject.Columns.find(column => column.Var === 'Date');
                         if (regionColumn) {
                             const regionValue = regionColumn.Value;
@@ -265,12 +297,10 @@
                 });
 
                 this.regionCounts = regionCounter;
+
+                this.gpsCalc();
             },
             regionName(region) {
-                // Aquí puedes definir la lógica para obtener el nombre de la región
-                // Puedes usar un objeto, una función, o cualquier método que tengas
-                // para mapear el número de región a su nombre correspondiente.
-                // Por ejemplo, un simple mapeo podría ser:
                 const regionNames = {
                     1: 'Tarapacá',
                     2: 'Antofagasta',
@@ -290,7 +320,25 @@
                     16: 'Ñuble',
                 };
                 return regionNames[region];
-            }
+            },
+            gpsCalc() {
+                this.gpsDatos = [];
+                this.formattedData.forEach(survey => {
+                    survey.Subjects.forEach(subject => {
+                        const lat_base = subject.Columns.find(column => column.Var === 'latitud_base')?.Value || '-';
+                        const lon_base = subject.Columns.find(column => column.Var === 'longitud_base')?.Value || '-';
+                        const lat_1 = subject.Columns.find(column => column.Var === 'gps_LA')?.Value || '-';
+                        const lon_1 = subject.Columns.find(column => column.Var === 'gps_LO')?.Value || '-';
+
+                        this.gpsDatos.push({
+                            lat_base,
+                            lon_base,
+                            lat_1,
+                            lon_1
+                        });
+                    });
+                });
+            },
         },
         mounted() {
             this.getDataStudies()
