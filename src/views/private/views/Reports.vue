@@ -143,31 +143,53 @@
             </div>
         </div>
         <div v-if="selectedTab === 'Diferencias GPS'">
-            <!-- <h2 class="text-xl font-semibold">Diferencias GPS</h2>
-            <p>Contenido de Diferencias GPS.</p> -->
-            <!-- <p>{{ formattedData }}</p> -->
-            <table>
-                <thead>
+            <table class="w-full text-sm border text-left rtl:text-right">
+                <thead class="text-white uppercase bg-violet-700">
                     <tr>
-                        <th>Lat Base</th>
-                        <th>Lon Base</th>
-                        <th>Lat 1</th>
-                        <th>Lon 1</th>
+                        <th class="px-6 py-3">ID</th>
+                        <!-- <th class="px-6 py-3">Lat Base</th>
+                        <th class="px-6 py-3">Lon Base</th>
+                        <th class="px-6 py-3">Lat 1</th>
+                        <th class="px-6 py-3">Lon 1</th> -->
+                        <th class="px-6 py-3">GPS Base</th>
+                        <th class="px-6 py-3">GPS 1</th>
+                        <th class="px-6 py-3">Distancia</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="(data, index) in gpsDatos" :key="index">
-                        <td>{{ data.lat_base }}</td>
+                        <td>{{ data.sbjnum }}</td>
+                        <!-- <td>{{ data.lat_base }}</td>
                         <td>{{ data.lon_base }}</td>
                         <td>{{ data.lat_1 }}</td>
-                        <td>{{ data.lon_1 }}</td>
+                        <td>{{ data.lon_1 }}</td> -->
+                        <td v-if="data.latlong_base == 'NaN,NaN'">-</td>
+                        <td v-else>{{ data.latlong_base }}</td>
+                        <td v-if="data.latlong_1 == 'NaN,NaN'">-</td>
+                        <td v-else>{{ data.latlong_1 }}</td>
+                        <td v-if="isNaN(data.distance)">-</td>
+                        <td v-else :style="{ color: data.distance > 1 ? 'red' : 'inherit' }">{{ data.distance }} KM</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         <div v-if="selectedTab === 'Flags'">
-            <h2 class="text-xl font-semibold">Flags</h2>
-            <p>Contenido de Flags.</p>
+            <table class="w-full text-sm border text-left rtl:text-right">
+                <thead class="text-white uppercase bg-violet-700">
+                    <tr>
+                        <th class="px-6 py-3">ID</th>
+                        <th class="px-6 py-3">Lat Base</th>
+                        <th class="px-6 py-3">Lon Base</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(data, index) in flagsDatos" :key="index">
+                        <td>{{ data.sbjnum }}</td>
+                        <td>{{ data.surveyor }}</td>
+                        <td>{{ data.flag_fakeGps }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </template>
@@ -199,6 +221,7 @@
                 RegionVarName: "",
                 progreso: 0,
                 gpsDatos: [],
+                flagsDatos: [],
 
             }
         },
@@ -325,16 +348,56 @@
                 this.gpsDatos = [];
                 this.formattedData.forEach(survey => {
                     survey.Subjects.forEach(subject => {
+                        const sbjnum = subject.SubjectID;
                         const lat_base = subject.Columns.find(column => column.Var === 'latitud_base')?.Value || '-';
                         const lon_base = subject.Columns.find(column => column.Var === 'longitud_base')?.Value || '-';
+                        const latlong_base = parseFloat(lat_base).toFixed(4)+","+parseFloat(lon_base).toFixed(4);
                         const lat_1 = subject.Columns.find(column => column.Var === 'gps_LA')?.Value || '-';
                         const lon_1 = subject.Columns.find(column => column.Var === 'gps_LO')?.Value || '-';
+                        const latlong_1 = parseFloat(lat_1).toFixed(4)+","+parseFloat(lon_1).toFixed(4);
+
+
+                        const toRadians = (degrees) => degrees * Math.PI / 180;
+
+                        const R = 6371;
+                        const dLat = toRadians(lat_1 - lat_base);
+                        const dLon = toRadians(lon_1 - lon_base);
+                        const a =
+                            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                            Math.cos(toRadians(lat_base)) * Math.cos(toRadians(lat_1)) *
+                            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                        
+                        const distance = (R * c).toFixed(2);                        
 
                         this.gpsDatos.push({
-                            lat_base,
+                            sbjnum,
+                            /* lat_base,
                             lon_base,
                             lat_1,
-                            lon_1
+                            lon_1 */
+                            latlong_base,
+                            latlong_1,
+                            distance
+                        });
+                    });
+                });
+
+                this.flagsData();
+            },
+
+            flagsData() {
+                this.flagsDatos = [];
+                this.formattedData.forEach(survey => {
+                    survey.Subjects.forEach(subject => {
+                        const sbjnum = subject.SubjectID;
+                        const surveyor = subject.Columns.find(column => column.Var === 'Srvyr')?.Value;
+                        const flag_fakeGps = subject.Columns.find(column => column.Var === 'FlagsByFakeGPS')?.Value;
+
+                        this.flagsDatos.push({
+                            sbjnum,
+                            surveyor,
+                            flag_fakeGps,
                         });
                     });
                 });
@@ -343,6 +406,34 @@
         mounted() {
             this.getDataStudies()
         }
+
+        /*
+        flags:
+            FlaggedByBacktracking
+            FlaggedByClockChanged
+            FlaggedByDeviceRooted
+            FlaggedByGPSAccuracy
+            FlaggedByGPSCapturedAtEnd
+            FlaggedByGPSServicesOff
+            FlaggedByGPSTimeDifferenceDate
+            FlaggedByGPSTimeDifferenceStale
+            FlaggedByNoSilentRecordings
+            FlaggedByPartialRacing
+            FlaggedByQuestionTakingTooLong
+            FlaggedByQuestionTakingTooLongComment
+            FlaggedByRuntimeScriptError
+            FlaggedByStraightLiningComment
+            FlagsByAnswerCode
+            FlagsByDuration
+            FlagsByFakeGPS
+            FlagsByNoGps
+            FlagsByReview
+            FlagsByScript
+            FlagsOddHours
+            FlagsShortOpenEnededAnswer
+            FlagsStraightLining
+            FlagsTooManySessions
+        */
     }
 </script>
 
