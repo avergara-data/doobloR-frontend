@@ -15,8 +15,8 @@ export const PrivateRoutes = [
         component: home,
         name: 'home',
         meta: {
-        title: 'home',
-        menu: 'home',
+        title: 'Inicio',
+        menu: 'Inicio',
         }
     },
     {
@@ -24,8 +24,8 @@ export const PrivateRoutes = [
         component: listUsers,
         name: 'list-users',
         meta: {
-        title: 'list-users',
-        menu: 'list-users',
+        title: 'Usuarios',
+        menu: 'Usuarios',
         }
     },
     {
@@ -33,8 +33,8 @@ export const PrivateRoutes = [
         component: listStudies,
         name: 'list-studies',
         meta: {
-        title: 'list-studies',
-        menu: 'list-studies',
+        title: 'Estudios',
+        menu: 'Estudios',
         }
     },
     {
@@ -42,8 +42,8 @@ export const PrivateRoutes = [
         component: reports,
         name: 'reports',
         meta: {
-        title: 'reports',
-        menu: 'reports',
+        title: 'Reportes',
+        menu: 'Reportes',
         }
     },
 ]

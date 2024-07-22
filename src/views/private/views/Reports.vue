@@ -178,8 +178,8 @@
                 <thead class="text-white uppercase bg-violet-700">
                     <tr>
                         <th class="px-6 py-3">ID</th>
-                        <th class="px-6 py-3">Lat Base</th>
-                        <th class="px-6 py-3">Lon Base</th>
+                        <th class="px-6 py-3">Encuestador</th>
+                        <th class="px-6 py-3">Fake GPS</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -392,7 +392,7 @@
                     survey.Subjects.forEach(subject => {
                         const sbjnum = subject.SubjectID;
                         const surveyor = subject.Columns.find(column => column.Var === 'Srvyr')?.Value;
-                        const flag_fakeGps = subject.Columns.find(column => column.Var === 'FlagsByFakeGPS')?.Value;
+                        const flag_fakeGps = subject.Columns.find(column => column.Var === 'FlagsByFakeGPS')?.Value ? "Si" : "No";
 
                         this.flagsDatos.push({
                             sbjnum,
