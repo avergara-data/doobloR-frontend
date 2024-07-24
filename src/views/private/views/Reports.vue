@@ -52,25 +52,34 @@
     <div class="p-6" v-if="activado==true">
         <div v-if="selectedTab === 'Resumen General'">
             <div class="flex flex-wrap -mx-4">
-                    <div class="w-full md:w-1/3 px-4 mb-4">
-                        <div class="bg-white shadow-md rounded-lg p-6">
-                            <h3 class="text-lg font-semibold">Total de encuestas</h3>
-                            <p>{{ surveyID.length }}</p>
-                        </div>
-                    </div>
-                    <div class="w-full md:w-1/3 px-4 mb-4">
-                        <div class="bg-white shadow-md rounded-lg p-6">
-                            <h3 class="text-lg font-semibold">Encuestas Correctas</h3>
-                            <p>{{ correctSurveyID.length }}</p>
-                        </div>
-                    </div>
-                    <div class="w-full md:w-1/3 px-4 mb-4">
-                        <div class="bg-white shadow-md rounded-lg p-6">
-                            <h3 class="text-lg font-semibold">Encuestas Incorrectas</h3>
-                            <p>{{ expiredcanceledSurveyID.length }}</p>
-                        </div>
+                <div class="w-full md:w-1/4 px-4 mb-4">
+                    <div class="bg-white shadow-md rounded-lg p-6">
+                        <h3 class="text-lg font-semibold">Encuestas a Lograr</h3>
+                        <p>{{ expectedCase }}</p>
                     </div>
                 </div>
+                <div class="w-full md:w-1/4 px-4 mb-4">
+                    <div class="bg-white shadow-md rounded-lg p-6">
+                        <h3 class="text-lg font-semibold">Encuestas Realizadas</h3>
+                        <p>{{ surveyID.length }}</p>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/4 px-4 mb-4">
+                    <div class="bg-white shadow-md rounded-lg p-6">
+                        <h3 class="text-lg font-semibold">Encuestas Correctas</h3>
+                        <p>{{ correctSurveyID.length }}</p>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/4 px-4 mb-4">
+                    <div class="bg-white shadow-md rounded-lg p-6">
+                        <h3 class="text-lg font-semibold">Encuestas Incorrectas</h3>
+                        <p>{{ expiredcanceledSurveyID.length }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="w-[500px] h-[500px] mx-auto mb-4">
+                <apexchart type="pie" :options="chartOptions" :series="series" />
+            </div>
         </div>
         <div v-if="selectedTab === 'Resumen por Región'">
             <div class="relative overflow-x-auto">
@@ -197,6 +206,7 @@
 <script>
     import GlobalService from "../../../services/GlobalServices";
     import axios from 'axios';
+
     export default {
         name: "reports",
         data() {
@@ -222,7 +232,26 @@
                 progreso: 0,
                 gpsDatos: [],
                 flagsDatos: [],
+                expectedCase: 0,
 
+                //grafico
+                series: [],
+                chartOptions: {
+                    chart: {
+                    type: 'pie',
+                    height: '10%',
+                    width: '10%', 
+                    toolbar: {
+                        show: false 
+                    },
+                    responsive: [],
+                },
+                labels: ['Encuestas realizadas', 'Encuestas faltantes'],
+                colors: ['#28a745', '#fd7e14'],
+                legend: {
+                    position: 'bottom'
+                },
+                }
             }
         },
         methods: {
@@ -241,6 +270,7 @@
                     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
                     //Carga nombre region
                     this.RegionVarName = study.RegionVarName;
+                    this.expectedCase = study.expectedCase;
                     //Total
                     const response = await axios.get(`http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=${study.surveyID}&testMode=False&completed=True&filtered=FalsedateType=Upload`, this.dooblouser)
                     this.surveyID = response.data
@@ -258,6 +288,9 @@
                     this.loading = false;
                     
                     this.activado = true;
+
+                    //llenar grafico
+                    this.series = [responsec.data.length, study.expectedCase - responsec.data.length];
                 } catch (error) {
                     console.error("Error", error);
                 }

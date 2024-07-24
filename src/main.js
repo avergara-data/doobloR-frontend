@@ -6,5 +6,6 @@ import Toast  from 'vue-toastification'
 import {options} from './notifications/toast.js'
 import App from './App.vue';
 import router from './router';
+import VueApexCharts from 'vue3-apexcharts';
 
-createApp(App).use(router).use(store).use(Toast,options).mount('#app')
+createApp(App).use(router).use(store).use(Toast,options).use(VueApexCharts).mount('#app')
