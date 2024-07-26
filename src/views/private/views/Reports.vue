@@ -186,6 +186,21 @@
             <table class="w-full text-sm border text-left rtl:text-right">
                 <thead class="text-white uppercase bg-violet-700">
                     <tr>
+                        <th class="px-6 py-3">Encuestador/a</th>
+                        <th class="px-6 py-3">Cantidad flags con FakeGPS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(count, surveyor) in flagsCountBySurveyor" :key="surveyor">
+                        <td>{{ surveyor }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br><hr><br>
+            <table class="w-full text-sm border text-left rtl:text-right">
+                <thead class="text-white uppercase bg-violet-700">
+                    <tr>
                         <th class="px-6 py-3">ID</th>
                         <th class="px-6 py-3">Encuestador</th>
                         <th class="px-6 py-3">Fake GPS</th>
@@ -199,6 +214,7 @@
                     </tr>
                 </tbody>
             </table>
+
         </div>
     </div>
 </template>
@@ -233,7 +249,8 @@
                 gpsDatos: [],
                 flagsDatos: [],
                 expectedCase: 0,
-
+                flagsCountBySurveyor: {},
+                
                 //grafico
                 series: [],
                 chartOptions: {
@@ -385,8 +402,8 @@
                         const lat_base = subject.Columns.find(column => column.Var === 'latitud_base')?.Value || '-';
                         const lon_base = subject.Columns.find(column => column.Var === 'longitud_base')?.Value || '-';
                         const latlong_base = parseFloat(lat_base).toFixed(4)+","+parseFloat(lon_base).toFixed(4);
-                        const lat_1 = subject.Columns.find(column => column.Var === 'gps_LA')?.Value || '-';
-                        const lon_1 = subject.Columns.find(column => column.Var === 'gps_LO')?.Value || '-';
+                        const lat_1 = subject.Columns.find(column => column.Var === 'gps1_LA')?.Value || '-';
+                        const lon_1 = subject.Columns.find(column => column.Var === 'gps1_LO')?.Value || '-';
                         const latlong_1 = parseFloat(lat_1).toFixed(4)+","+parseFloat(lon_1).toFixed(4);
 
 
@@ -420,18 +437,29 @@
             },
 
             flagsData() {
-                this.flagsDatos = [];
+                //this.flagsDatos = [];
                 this.formattedData.forEach(survey => {
                     survey.Subjects.forEach(subject => {
                         const sbjnum = subject.SubjectID;
                         const surveyor = subject.Columns.find(column => column.Var === 'Srvyr')?.Value;
                         const flag_fakeGps = subject.Columns.find(column => column.Var === 'FlagsByFakeGPS')?.Value ? "Si" : "No";
 
-                        this.flagsDatos.push({
-                            sbjnum,
-                            surveyor,
-                            flag_fakeGps,
-                        });
+                        this.flagsDatos.push({sbjnum,surveyor,flag_fakeGps,});
+
+                        if (!this.flagsCountBySurveyor[surveyor]) {
+                            this.flagsCountBySurveyor[surveyor] = 0;
+                        }
+                    });
+                });          
+
+                this.formattedData.forEach(survey => {
+                    survey.Subjects.forEach(subject => {
+                        const surveyor = subject.Columns.find(column => column.Var === 'Srvyr')?.Value;
+                        const flag_fakeGps = subject.Columns.find(column => column.Var === 'FlagsByFakeGPS')?.Value ? "Si" : "No";
+
+                        if (flag_fakeGps === "Si") {
+                            this.flagsCountBySurveyor[surveyor]++;
+                        }
                     });
                 });
             },
