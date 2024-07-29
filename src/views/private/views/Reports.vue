@@ -187,7 +187,7 @@
                 <thead class="text-white uppercase bg-violet-700">
                     <tr>
                         <th class="px-6 py-3">Encuestador/a</th>
-                        <th class="px-6 py-3">Cantidad flags con FakeGPS</th>
+                        <th class="px-6 py-3">Cantidad encuestas con FakeGPS</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -197,7 +197,7 @@
                     </tr>
                 </tbody>
             </table>
-            <br><hr><br>
+            <!-- <br><hr><br>
             <table class="w-full text-sm border text-left rtl:text-right">
                 <thead class="text-white uppercase bg-violet-700">
                     <tr>
@@ -213,7 +213,7 @@
                         <td>{{ data.flag_fakeGps }}</td>
                     </tr>
                 </tbody>
-            </table>
+            </table> -->
 
         </div>
     </div>
@@ -250,6 +250,7 @@
                 flagsDatos: [],
                 expectedCase: 0,
                 flagsCountBySurveyor: {},
+                gpsAVarName: "",
                 
                 //grafico
                 series: [],
@@ -285,9 +286,11 @@
                 try {
                     this.loading = true;
                     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-                    //Carga nombre region
+                    //Carga nombre variables dooblo
                     this.RegionVarName = study.RegionVarName;
                     this.expectedCase = study.expectedCase;
+                    this.gpsAVarName = study.GPSAVarName;
+                    
                     //Total
                     const response = await axios.get(`http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=${study.surveyID}&testMode=False&completed=True&filtered=FalsedateType=Upload`, this.dooblouser)
                     this.surveyID = response.data
@@ -398,12 +401,14 @@
                 this.gpsDatos = [];
                 this.formattedData.forEach(survey => {
                     survey.Subjects.forEach(subject => {
+                        const latVarname = this.gpsAVarName+"_LA";
+                        const lonVarname = this.gpsAVarName+"_LO";
                         const sbjnum = subject.SubjectID;
                         const lat_base = subject.Columns.find(column => column.Var === 'latitud_base')?.Value || '-';
                         const lon_base = subject.Columns.find(column => column.Var === 'longitud_base')?.Value || '-';
                         const latlong_base = parseFloat(lat_base).toFixed(4)+","+parseFloat(lon_base).toFixed(4);
-                        const lat_1 = subject.Columns.find(column => column.Var === 'gps1_LA')?.Value || '-';
-                        const lon_1 = subject.Columns.find(column => column.Var === 'gps1_LO')?.Value || '-';
+                        const lat_1 = subject.Columns.find(column => column.Var === latVarname)?.Value || '-';
+                        const lon_1 = subject.Columns.find(column => column.Var === lonVarname)?.Value || '-';
                         const latlong_1 = parseFloat(lat_1).toFixed(4)+","+parseFloat(lon_1).toFixed(4);
 
 
