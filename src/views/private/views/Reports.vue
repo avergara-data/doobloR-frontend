@@ -131,8 +131,8 @@
                                 {{regionInfo.today}}
                             </td>
                             <td class="px-6 py-3">
-                                <div class="relative h-4 bg-neutral-400 rounded-full">
-                                    <div class="absolute inset-y-0 left-0 flex items-center rounded-full"
+                                <div class="relative h-4 bg-neutral-400 rounded-sm">
+                                    <div class="absolute inset-y-0 left-0 flex items-center rounded-sm"
                                         :class="{
                                             'bg-green-500': regionInfo.total / regionInfo.total_reg >= 1,
                                             'bg-orange-500': regionInfo.total / regionInfo.total_reg >= 0.5 && regionInfo.total / regionInfo.total_reg < 1,
@@ -289,7 +289,7 @@
                     //Carga nombre variables dooblo
                     this.RegionVarName = study.RegionVarName;
                     this.expectedCase = study.expectedCase;
-                    this.gpsAVarName = study.GPSAVarName;
+                    this.gpsAVarName = study.gpsAVarName;
                     
                     //Total
                     const response = await axios.get(`http://api.dooblo.net/newapi/SurveyInterviewIDs?surveyIDs=${study.surveyID}&testMode=False&completed=True&filtered=FalsedateType=Upload`, this.dooblouser)
